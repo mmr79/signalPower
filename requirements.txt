@@ -24,4 +24,6 @@ streamlit == 0.79.0
 
 # C:\Users\mraslan\Downloads\project\crypto1.py: 21
 tweepy == 3.10.0
-TA-Lib == 0.4.20
+TA-Lib == 0.4.19
+TAcharts==0.0.29
+tapy==1.9.1
