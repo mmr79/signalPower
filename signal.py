@@ -36,25 +36,25 @@ for symbol in symbs:
 
 @st.cache(allow_output_mutation=True)
 def scan_signal(symbols):
-
-
         start_time = time.time()
-        
-        
         intervals=[Interval.INTERVAL_5_MINUTES ,Interval.INTERVAL_15_MINUTES,Interval.INTERVAL_1_HOUR,Interval.INTERVAL_4_HOURS ,Interval.INTERVAL_1_DAY]
-        buy=[]
-        sell=[]
-        neutral=[]
+        #buy=[]
+        #sell=[]
+        #neutral=[]
         recommendation=[]
         interv=[]
         symb=[]
         total_score=[]
         symb_score=[]
+        score_indicator=[]
+        tf_all=[]
         df=pd.DataFrame()
         #symbols=['BTCUSDT','ETHUSDT','ICPUSDT','XRPUSDT']
         for symbol in symbols:
             symb_rec=[]
+            buyTF=' '
             score=0
+            ind_score=0
             try:
                 for interval in intervals:
         
@@ -69,15 +69,18 @@ def scan_signal(symbols):
                     interv.append(interval)
                     symb.append(symbol)
                     x=coin.get_analysis().summary
-                    buy.append(x['BUY'])
-                    sell.append(x['SELL'])
-                    neutral.append(x['NEUTRAL'])
+                    #buy.append(x['BUY'])
+                    #sell.append(x['SELL'])
+                    ind_score=ind_score+(x['BUY']-x['SELL'])
+                    #neutral.append(x['NEUTRAL'])
                     recommendation.append(x['RECOMMENDATION'])
                     symb_rec.append(x['RECOMMENDATION'])
                     if x['RECOMMENDATION']=='BUY':
                         score=score+1
+                        buyTF=buyTF+' '+interval
                     elif x['RECOMMENDATION']=='STRONG_BUY':
                         score=score+2
+                        buyTF=buyTF+' '+interval
                     elif x['RECOMMENDATION']=='SELL':
                         score=score-1
                     elif x['RECOMMENDATION']=='STRONG_SELL':
@@ -88,11 +91,16 @@ def scan_signal(symbols):
                 print("--- %s seconds ---" % (time.time() - start_time))
                 total_score.append(score)
                 symb_score.append(symbol)
+                score_indicator.append(ind_score)
+                tf_all.append(buyTF)
+                #print(symb_score,tf_all,score_indicator)
             except:
                 continue
                 
         df['symbol']=symb_score
         df['Score']=total_score
+        df['buy_sell_score']=score_indicator
+        df['tf_buy']=tf_all
         #df['symbol']=symb
         #df['interval']=interv
         #df['buy']=buy
@@ -111,7 +119,7 @@ elif flag=='USDT':
     z=u
 
 
-symbols=[]   
+symbo=[]   
 for i in z:
     if "DOWN/" in i or 'UP/' in i or 'BULL/' in i or 'BEAR/' in i:
         t=1
@@ -124,14 +132,19 @@ for i in z:
     #print(t)
    # if(t==-1):
         #print(i)
-        symbols.append(i)
-        
-a=['PAXUSDT','TUSDUSDT','USDCUSDT','BUSDUSDT','PAXGUSDT']
-for i in range(0,len(symbols)):
-    if symbols[i] not in a:
-        symbols[i]=symbols[i].replace('/','')
+        symbo.append(i)
+symbols=[]
 
-df=scan_signal(symbols)
+for i in range(0,len(symbo)):
+    #if symbols[i] not in a:
+        symbo[i]=symbo[i].replace('/','')
+a=['PAXUSDT','TUSDUSDT','USDCUSDT','BUSDUSDT','PAXGUSDT','EURUSDT','SUSDUSDT','GBPUSDT']
+for symbol in symbo:
+    if symbol not in a:
+        symbols.append(symbol)
+        
+#symbols=['PAXUSDT','TUSDUSDT','USDCUSDT','BUSDUSDT','PAXGUSDT','EURUSDT','SUSDUSDT','GBPUSDT']
+#df=scan_signal(symbols)
 button=st.button('rescan again')
 if button==1:
     caching.clear_cache()
