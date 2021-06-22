@@ -37,7 +37,7 @@ for symbol in symbs:
 @st.cache(allow_output_mutation=True)
 def scan_signal(symbols):
         start_time = time.time()
-        intervals=[Interval.INTERVAL_5_MINUTES ,Interval.INTERVAL_15_MINUTES,Interval.INTERVAL_1_HOUR,Interval.INTERVAL_4_HOURS ,Interval.INTERVAL_1_DAY]
+        intervals=[Interval.INTERVAL_15_MINUTES,Interval.INTERVAL_1_HOUR,Interval.INTERVAL_4_HOURS ,Interval.INTERVAL_1_DAY]
         #buy=[]
         #sell=[]
         #neutral=[]
