@@ -142,7 +142,7 @@ a=['PAXUSDT','TUSDUSDT','USDCUSDT','BUSDUSDT','PAXGUSDT','EURUSDT','SUSDUSDT','G
 for symbol in symbo:
     if symbol not in a:
         symbols.append(symbol)
-st.write_text('Number of symbos to scan is :'+ str(len(symbols)))
+st.write('Number of symbos to scan is :'+ str(len(symbols)))
 #symbols=['PAXUSDT','TUSDUSDT','USDCUSDT','BUSDUSDT','PAXGUSDT','EURUSDT','SUSDUSDT','GBPUSDT']
 #df=scan_signal(symbols)
 button=st.button('rescan again')
