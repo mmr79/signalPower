@@ -9,7 +9,7 @@ import ccxt
 import pandas as pd
 import streamlit as st
 from streamlit import caching
-from datetime import datetime
+        
 from tradingview_ta import TA_Handler, Interval, Exchange
 import time
 hide_streamlit_style = """
@@ -34,7 +34,7 @@ for symbol in symbs:
         u.append(symbol)
 
 
-@st.cache(allow_output_mutation=True,suppress_st_warning=True)
+@st.cache(allow_output_mutation=True)
 def scan_signal(symbols):
         start_time = time.time()
         intervals=[Interval.INTERVAL_5_MINUTES ,Interval.INTERVAL_15_MINUTES,Interval.INTERVAL_1_HOUR,Interval.INTERVAL_4_HOURS ,Interval.INTERVAL_1_DAY]
@@ -49,14 +49,8 @@ def scan_signal(symbols):
         score_indicator=[]
         tf_all=[]
         df=pd.DataFrame()
-        #l=len(symbols)
-        #count=0
-        #mybar=st.progress(0)
         #symbols=['BTCUSDT','ETHUSDT','ICPUSDT','XRPUSDT']
         for symbol in symbols:
-         #   count+=1
-          #  perc=count/l
-          #  mybar.progress(perc)
             symb_rec=[]
             buyTF=' '
             score=0
@@ -75,7 +69,6 @@ def scan_signal(symbols):
                     interv.append(interval)
                     symb.append(symbol)
                     x=coin.get_analysis().summary
-                    
                     #buy.append(x['BUY'])
                     #sell.append(x['SELL'])
                     ind_score=ind_score+(x['BUY']-x['SELL'])
@@ -116,7 +109,6 @@ def scan_signal(symbols):
         #df['recommendation']=recommendation
         # Example 
         print("--- %s seconds ---" % (time.time() - start_time))
-
         return df
     
 flag=st.selectbox('choose the symbol BTC or USDT',['USDT','BTC'])
@@ -150,18 +142,12 @@ a=['PAXUSDT','TUSDUSDT','USDCUSDT','BUSDUSDT','PAXGUSDT','EURUSDT','SUSDUSDT','G
 for symbol in symbo:
     if symbol not in a:
         symbols.append(symbol)
-st.write('Number of symbos to scan is :'+ str(len(symbols)))
+st.write_text('Number of symbos to scan is :'+ str(len(symbols)))
 #symbols=['PAXUSDT','TUSDUSDT','USDCUSDT','BUSDUSDT','PAXGUSDT','EURUSDT','SUSDUSDT','GBPUSDT']
 #df=scan_signal(symbols)
-#button=st.button('rescan again')
-#if button==1:
-
-while True:
-        if ((datetime.now().minute == (0 or 30)) & (datetime.now().second == 0)):
-                #caching.clear_cache()
-                print(datetime.now().minute)
-                df=scan_signal(symbols)
-                st.write('Last updated '+ str(datetime.now()))
-                f=df.sort_values('Score',ascending=False)[:100]
-                st.dataframe(f)
-
+button=st.button('rescan again')
+if button==1:
+    caching.clear_cache()
+    df=scan_signal(symbols)  
+f=df.sort_values('Score',ascending=False)[:50]
+st.dataframe(f)
