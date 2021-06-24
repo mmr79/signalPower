@@ -1,25 +1,20 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sun Jun 20 22:09:50 2021
+Created on Wed Jun 23 15:06:38 2021
 
 @author: mraslan
 """
-
 import ccxt
-import pandas as pd
+from schedule_manager import ScheduleManager
 import streamlit as st
-from streamlit import caching
-        
-from tradingview_ta import TA_Handler, Interval, Exchange
+import pandas as pd
+from crypto_signals import *
+from schedule_manager import ScheduleManager
+from datetime import datetime
 import time
-hide_streamlit_style = """
-<style>
-#MainMenu {visibility: hidden;}
-footer {visibility: hidden;}
-</style>
+import pymongo
+import pandas as pd
 
-"""
-st.markdown(hide_streamlit_style, unsafe_allow_html=True) 
 ex=ccxt.binance()
 ex.load_markets()
 f=pd.DataFrame(ex.fetch_markets())
@@ -32,84 +27,6 @@ for symbol in symbs:
         s.append(symbol)
     if symbol.split('/')[1]=='USDT':
         u.append(symbol)
-
-
-@st.cache(allow_output_mutation=True)
-def scan_signal(symbols):
-        start_time = time.time()
-        intervals=[Interval.INTERVAL_15_MINUTES,Interval.INTERVAL_1_HOUR,Interval.INTERVAL_4_HOURS ,Interval.INTERVAL_1_DAY]
-        #buy=[]
-        #sell=[]
-        #neutral=[]
-        recommendation=[]
-        interv=[]
-        symb=[]
-        total_score=[]
-        symb_score=[]
-        score_indicator=[]
-        tf_all=[]
-        df=pd.DataFrame()
-        #symbols=['BTCUSDT','ETHUSDT','ICPUSDT','XRPUSDT']
-        for symbol in symbols:
-            symb_rec=[]
-            buyTF=' '
-            score=0
-            ind_score=0
-            try:
-                for interval in intervals:
-        
-                    coin = TA_Handler(
-                        symbol=symbol,
-                        screener="crypto",
-                        exchange="binance",
-                        interval=interval
-                    )
-                    #print(symbol,interval)
-        
-                    interv.append(interval)
-                    symb.append(symbol)
-                    x=coin.get_analysis().summary
-                    #buy.append(x['BUY'])
-                    #sell.append(x['SELL'])
-                    ind_score=ind_score+(x['BUY']-x['SELL'])
-                    #neutral.append(x['NEUTRAL'])
-                    recommendation.append(x['RECOMMENDATION'])
-                    symb_rec.append(x['RECOMMENDATION'])
-                    if x['RECOMMENDATION']=='BUY':
-                        score=score+1
-                        buyTF=buyTF+' '+interval
-                    elif x['RECOMMENDATION']=='STRONG_BUY':
-                        score=score+2
-                        buyTF=buyTF+' '+interval
-                    elif x['RECOMMENDATION']=='SELL':
-                        score=score-1
-                    elif x['RECOMMENDATION']=='STRONG_SELL':
-                        score=score-2
-                    else:
-                        score=score
-                print(symbol,score)
-                print("--- %s seconds ---" % (time.time() - start_time))
-                total_score.append(score)
-                symb_score.append(symbol)
-                score_indicator.append(ind_score)
-                tf_all.append(buyTF)
-                #print(symb_score,tf_all,score_indicator)
-            except:
-                continue
-                
-        df['symbol']=symb_score
-        df['Score']=total_score
-        df['buy_sell_score']=score_indicator
-        df['tf_buy']=tf_all
-        #df['symbol']=symb
-        #df['interval']=interv
-        #df['buy']=buy
-        #df['sell']=sell
-        #df['neutral']=neutral
-        #df['recommendation']=recommendation
-        # Example 
-        print("--- %s seconds ---" % (time.time() - start_time))
-        return df
     
 flag=st.selectbox('choose the symbol BTC or USDT',['USDT','BTC'])
 if flag=='BTC':
@@ -118,7 +35,6 @@ if flag=='BTC':
 elif flag=='USDT':
     z=u
 
-
 symbo=[]   
 for i in z:
     if "DOWN/" in i or 'UP/' in i or 'BULL/' in i or 'BEAR/' in i:
@@ -126,12 +42,6 @@ for i in z:
        
     else:
         t=-1
-    
-    
-    #t=((i.find('DOWN/')) or (i.find('UP/')) or (i.find('BULL/')) or (i.find('BEAR/')))
-    #print(t)
-   # if(t==-1):
-        #print(i)
         symbo.append(i)
 symbols=[]
 
@@ -142,12 +52,41 @@ a=['PAXUSDT','TUSDUSDT','USDCUSDT','BUSDUSDT','PAXGUSDT','EURUSDT','SUSDUSDT','G
 for symbol in symbo:
     if symbol not in a:
         symbols.append(symbol)
-st.write('Number of symbos to scan is :'+ str(len(symbols)))
-#symbols=['PAXUSDT','TUSDUSDT','USDCUSDT','BUSDUSDT','PAXGUSDT','EURUSDT','SUSDUSDT','GBPUSDT']
-#df=scan_signal(symbols)
-button=st.button('rescan again')
-if button==1:
-    caching.clear_cache()
-    df=scan_signal(symbols)  
-f=df.sort_values('Score',ascending=False)[:50]
-st.dataframe(f)
+
+client = pymongo.MongoClient("mongodb://Mohamed:M12345678@cluster0-shard-00-00.otw9p.mongodb.net:27017,cluster0-shard-00-01.otw9p.mongodb.net:27017,cluster0-shard-00-02.otw9p.mongodb.net:27017/crypto_OHLCV?ssl=true&replicaSet=atlas-10tsd5-shard-0&authSource=admin&retryWrites=true&w=majority")
+db = client.test
+db = client["Signal_OHLCV"]
+manager = ScheduleManager()
+def job15m():
+    print('15m')
+    signal(symbols,['15m'],db)
+def job1h():
+    print('1h')
+    signal(symbols,['1h'],db)
+def job4h():
+    print('4h')
+    signal(symbols,['4h'],db)
+def job1d():
+    print('1d')
+    signal(symbols,['1d'],db)
+
+# Schedule a periodic task: do job every 60 seconds
+
+manager.register_task(name="task1", job=job15m).period(900).start_at("11:30:00").start()
+manager.register_task(name="task2", job=job1h).period(3600).start_at("11:00:00").start()
+manager.register_task(name="task3", job=job4h).period(14400).start_at("10:00:00").start()
+manager.register_task(name="task4", job=job1d).period_day_at("02:00:00").start()
+
+@st.cache(allow_output_mutation=True)
+def Call_db():
+    final,times=Call_db_signals()
+    return final,times
+
+
+
+final,times =Call_db()
+st.dataframe(final.drop_duplicates())
+st.write('15m last updated at '+times[0])
+st.write('1h last updated at '+times[1])
+st.write('4h last updated at '+times[2])
+st.write('1d last updated at '+times[3])
