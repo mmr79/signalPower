@@ -117,7 +117,7 @@ def signal(symbols,intervals,db):
                 else:
                     score=score
             print(symbol,score)
-            print("--- %s seconds ---" % (time.time() - start_time))
+            #print("--- %s seconds ---" % (time.time() - start_time))
             total_score.append(score)
             symb_score.append(symbol)
             score_indicator.append(ind_score)
