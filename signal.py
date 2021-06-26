@@ -89,6 +89,8 @@ def Call_db():
     final,times=Call_db_signals()
     return final,times
 final,times =Call_db()
+
+flag=st.button('Update')
 if flag==1:
     caching.clear_cache()
     final,times =Call_db()
