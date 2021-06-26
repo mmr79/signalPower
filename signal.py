@@ -14,6 +14,7 @@ from datetime import datetime
 import time
 import pymongo
 import pandas as pd
+from streamlit import caching
 hide_streamlit_style = """
 <style>
 #MainMenu {visibility: hidden;}
