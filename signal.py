@@ -88,10 +88,12 @@ manager.register_task(name="task4", job=job1d).period_day_at("02:00:00").start()
 def Call_db():
     final,times=Call_db_signals()
     return final,times
+if flag==1:
+    caching.clear_cache()
+    final,times =Call_db()
 
 
-
-final,times =Call_db()
+#final,times =Call_db()
 st.dataframe(final.drop_duplicates())
 st.write('15m last updated at '+times[0])
 st.write('1h last updated at '+times[1])
