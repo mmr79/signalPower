@@ -80,10 +80,10 @@ def job1d():
 
 # Schedule a periodic task: do job every 60 seconds
 def update_db():
-    manager.register_task(name="task1", job=job15m).period(900).start_at("11:30:00").start()
-    manager.register_task(name="task2", job=job1h).period(3600).start_at("11:00:00").start()
-    manager.register_task(name="task3", job=job4h).period(14400).start_at("10:00:00").start()
-    manager.register_task(name="task4", job=job1d).period_day_at("02:00:00").start()
+    manager.register_task(name="task1", job=job15m).period(900).start_at("10:00:00").start()
+    manager.register_task(name="task2", job=job1h).period(3600).start_at("10:00:00").start()
+    manager.register_task(name="task3", job=job4h).period(14400).start_at("12:00:00").start()
+    manager.register_task(name="task4", job=job1d).period_day_at("10:00:00").start()
 
 @st.cache(allow_output_mutation=True)
 def Call_db():
