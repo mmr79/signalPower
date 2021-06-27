@@ -79,6 +79,7 @@ def job1d():
     signal(symbols,['1d'],db)
 
 # Schedule a periodic task: do job every 60 seconds
+@st.cache(allow_output_mutation=True)
 def update_db():
     manager.register_task(name="task1", job=job15m).period(900).start_at("10:00:00").start()
     manager.register_task(name="task2", job=job1h).period(3600).start_at("10:00:00").start()
