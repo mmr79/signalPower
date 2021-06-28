@@ -78,7 +78,9 @@ def job1d():
     print('1d')
     signal(symbols,['1d'],db)
 
+
 # Schedule a periodic task: do job every 60 seconds
+@st.cache(allow_output_mutation=True)
 def update_db():
     manager.register_task(name="task1", job=job15m).period(900).start_at("10:00:00").start()
     manager.register_task(name="task2", job=job1h).period(3600).start_at("10:00:00").start()
@@ -92,10 +94,19 @@ def Call_db():
 final,times =Call_db()
 update_db()
 flag=st.button('Update')
-if flag==1:
-    caching.clear_cache()
-    final,times =Call_db()
+#if flag==1:
+ #   caching.clear_cache()
+  #  final,times =Call_db()
+    
+@st.cache(allow_output_mutation=True)
+def mutable_cache():
+    return final,times
 
+mutable_object = mutable_cache()
+
+if flag==1:
+    mutable_object.clear()
+    final,times =Call_db()
 
 
 st.dataframe(final.drop_duplicates())
