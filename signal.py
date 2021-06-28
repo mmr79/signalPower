@@ -112,7 +112,8 @@ def get_mutable():
 
 mutable_object = get_mutable()
 if st.button('Update'):
-    mutable_object.clear()   
+    mutable_object=[] 
+    final,times =Call_db()
 
 
 st.dataframe(final.drop_duplicates())
