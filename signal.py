@@ -114,7 +114,11 @@ mutable_object = get_mutable()
 if st.button('Update'):
     mutable_object=[] 
     final,times =Call_db()
-
+flag=st.button('DB_reload')
+if flag==1:
+    caching.clear_cache()
+    final,times =Call_db()
+    update_db()
 
 st.dataframe(final.drop_duplicates())
 st.write('15m last updated at '+times[0])
