@@ -98,12 +98,20 @@ def update_db():
 def Call_db():
     final,times=Call_db_signals()
     return final,times
+
+@st.cache(allow_output_mutation=True)
+def get_mutable():
+    return final
+
+mutable_object = get_mutable()
+if st.button('Update'):
+    mutable_object.clear()
 final,times =Call_db()
 update_db()
-flag=st.button('Update')
-if flag==1:
-    caching.clear_cache()
-    final,times =Call_db()
+#flag=st.button('Update')
+#if flag==1:
+#    caching.clear_cache()
+ #   final,times =Call_db()
     
 
 
