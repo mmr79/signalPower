@@ -94,19 +94,10 @@ def Call_db():
 final,times =Call_db()
 
 flag=st.button('Update')
-#if flag==1:
- #   caching.clear_cache()
-  #  final,times =Call_db()
-    
-@st.cache(allow_output_mutation=True)
-def mutable_cache():
-    return final,times
-
-mutable_object = mutable_cache()
-
 if flag==1:
-    mutable_object.clear()
+    caching.clear_cache()
     final,times =Call_db()
+    
 
 
 st.dataframe(final.drop_duplicates())
