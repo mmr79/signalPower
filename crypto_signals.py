@@ -130,7 +130,7 @@ def signal(symbols,intervals,db):
     df['Score']=total_score
     df['interval']=intervs
     df['score_indicator']=score_indicator
-    df['Date']=datetime.now()
+    df['Date']=df['Date']=coin.get_analysis().time
     #df['symbol']=symb
     #df['interval']=interv
     #df['buy']=buy
