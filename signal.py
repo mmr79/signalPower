@@ -89,7 +89,7 @@ def job1d():
 
 
 # Schedule a periodic task: do job every 60 seconds
-@st.cache(allow_output_mutation=True,hash_funcs={ db_connect(): id})
+@st.cache(allow_output_mutation=True,hash_funcs={ crypto_signals.signal: id})
 def update_db():
     manager = ScheduleManager()
     manager.register_task(name="task1", job=job15m).period(900).start_at("10:00:00").start()
