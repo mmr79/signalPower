@@ -123,26 +123,29 @@ if flag==1:
     update_db()
     final,times =Call_db()
 options = st.multiselect('What Buy Time frame you want',['15m', '1h', '4h', '1d'],['15m','1h'])
-opt=''
+if options:
+    opt=''
 
-if '15m' in options:
-    opt=opt+' 15m'
-if '1h' in options:
-    opt=opt+' 1h'
-if '4h' in options:
-    opt=opt+' 4h'
-if '1d' in options:
-    opt=opt+' 1d'
-    
-if(opt[0]==' '):
-    opt=opt.replace(" ","")
+    if '15m' in options:
+        opt=opt+' 15m'
+    if '1h' in options:
+        opt=opt+' 1h'
+    if '4h' in options:
+        opt=opt+' 4h'
+    if '1d' in options:
+        opt=opt+' 1d'
 
-st.write('You selected:', options)
+    if(opt[0]==' '):
+        opt=opt.replace(" ","")
 
-final['interval'] = final['interval'].str.replace(" ","")
+    st.write('You selected:', options)
 
-f=final[final['interval']==opt]
-st.dataframe(f.drop_duplicates())
+    final['interval'] = final['interval'].str.replace(" ","")
+
+    f=final[final['interval']==opt]
+    st.dataframe(f.drop_duplicates())
+else:
+    st.dataframe(final.drop_duplicates())
 st.write('15m last updated at '+times[0])
 st.write('1h last updated at '+times[1])
 st.write('4h last updated at '+times[2])
