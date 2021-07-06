@@ -1,26 +1,20 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Jun 28 13:16:52 2021
+Created on Wed Jul  7 00:07:17 2021
 
 @author: mraslan
 """
 
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Jun 23 15:06:38 2021
 
-@author: mraslan
-"""
-import ccxt
-from schedule_manager import ScheduleManager
-import streamlit as st
-import pandas as pd
-from crypto_signals import *
-from schedule_manager import ScheduleManager
 from datetime import datetime
-import time
-import pymongo
 import pandas as pd
+import streamlit as st
+from tradingview_ta import TA_Handler, Interval, Exchange
+import time
+from datetime import datetime
+import ccxt
+import numpy as np
+from tradingview_ta import *
 from streamlit import caching
 hide_streamlit_style = """
 <style>
@@ -30,124 +24,141 @@ footer {visibility: hidden;}
 
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True) 
-ex=ccxt.binance()
-ex.load_markets()
-f=pd.DataFrame(ex.fetch_markets())
-symbs=f[f['active']==True].symbol.unique()
 
-s=[]
-u=[]
-for symbol in symbs:
-    if symbol.split('/')[1]=='BTC':
-        s.append(symbol)
-    if symbol.split('/')[1]=='USDT':
-        u.append(symbol)
-    
-flag=st.selectbox('choose the symbol BTC or USDT',['USDT','BTC'])
-if flag=='BTC':
-    z=s
-    
-elif flag=='USDT':
+        
+@st.cache(allow_output_mutation=True)
+def update():
+    ex=ccxt.binance()
+    ex.load_markets()
+    f=pd.DataFrame(ex.fetch_markets())
+    symbs=f[f['active']==True].symbol.unique()
+    s=[]
+    u=[]
+    for symbol in symbs:
+        if symbol.split('/')[1]=='BTC':
+            s.append(symbol)
+        if symbol.split('/')[1]=='USDT':
+            u.append(symbol)
     z=u
+    symbo=[]   
+    for i in z:
+        if "DOWN/" in i or 'UP/' in i or 'BULL/' in i or 'BEAR/' in i:
+            t=1
+           
+        else:
+            t=-1
+            symbo.append(i)
+    symbols=[]
+    symm=[]
+    for i in range(0,len(symbo)):
+        #if symbols[i] not in a:
+            symbo[i]=symbo[i].replace('/','')
+    a=['PAXUSDT','TUSDUSDT','USDCUSDT','BUSDUSDT','PAXGUSDT','EURUSDT','SUSDUSDT','GBPUSDT']
+    nam='BINANCE:'
+    for symbol in symbo:
+        if symbol not in a:
+            symbols.append(nam+symbol)
+            symm.append(symbol)
+    analysis_5m = get_multiple_analysis(screener="crypto", interval=Interval.INTERVAL_5_MINUTES, symbols=symbols)
+    analysis_15m = get_multiple_analysis(screener="crypto", interval=Interval.INTERVAL_15_MINUTES, symbols=symbols)
+    analysis_1h = get_multiple_analysis(screener="crypto", interval=Interval.INTERVAL_1_HOUR, symbols=symbols)
+    analysis_4h = get_multiple_analysis(screener="crypto", interval=Interval.INTERVAL_4_HOURS, symbols=symbols)
+    analysis_1d = get_multiple_analysis(screener="crypto", interval=Interval.INTERVAL_1_DAY, symbols=symbols)
+    analysis_1W = get_multiple_analysis(screener="crypto", interval=Interval.INTERVAL_1_WEEK, symbols=symbols)
+    analysis_1M = get_multiple_analysis(screener="crypto", interval=Interval.INTERVAL_1_MONTH, symbols=symbols)
+    df=pd.DataFrame()
+    recommendation=np.array([])
+    interv=np.array([])
+    symb=np.array([])
+    total_score=np.array([])
+    symb_score=np.array([])
+    symbs=np.array([])
+    df=pd.DataFrame()
+    intervs=np.array([])
+    intervs_sell=np.array([])
+    intervals=['5m','15m','1h','4h','1D','1W','1M']
+    score_indicator=np.array([])
+    for symbol in symbols:
+        symb_rec=np.array([])
+        buyTF=' '
+        sellTF=' '
+        ind_score=0
+        score=0
+        tf=[analysis_5m[symbol].summary,analysis_15m[symbol].summary,analysis_1h[symbol].summary,analysis_4h[symbol].summary,analysis_1d[symbol].summary,analysis_1W[symbol].summary,analysis_1M[symbol].summary]
+        i=0
+        for coin in tf:
+            interval=intervals[i]
+            i+=1
+            x=coin
+            interv=np.append(interv,interval)
+            #symb.append(symbol)
+            symb=np.append(symb,symbol)
+            ind_score=ind_score+(x['BUY']-x['SELL'])
+            recommendation=np.append(recommendation,x['RECOMMENDATION'])
+            symb_rec=np.append(symb_rec,x['RECOMMENDATION'])
+            if x['RECOMMENDATION']=='BUY':
+                score=score+1
+                buyTF=buyTF+' '+interval
+            elif x['RECOMMENDATION']=='STRONG_BUY':
+                score=score+2
+                buyTF=buyTF+' '+interval
+            elif x['RECOMMENDATION']=='SELL':
+                score=score-1
+                sellTF=sellTF+' '+interval
+            elif x['RECOMMENDATION']=='STRONG_SELL':
+                score=score-2
+                sellTF=sellTF+' '+interval
+            else:
+                score=score
+           
+        symbs=np.append(symbs,symbol)         
+        total_score=np.append(total_score,score)
+        symb_score=np.append(symb_score,ind_score)
+        score_indicator=np.append(score_indicator,ind_score)
+        intervs=np.append(intervs,buyTF)
+        intervs_sell=np.append(intervs_sell,sellTF)
+    
+            #print(symbol,score)
+    df['symbol']=symbs
+    df['Score']=total_score
+    df['buy_interval']=intervs
+    df['sell_intervals']=intervs_sell
+    df['score_indicator']=score_indicator        
+    return df
 
-symbo=[]   
-for i in z:
-    if "DOWN/" in i or 'UP/' in i or 'BULL/' in i or 'BEAR/' in i:
-        t=1
-       
-    else:
-        t=-1
-        symbo.append(i)
-symbols=[]
-
-for i in range(0,len(symbo)):
-    #if symbols[i] not in a:
-        symbo[i]=symbo[i].replace('/','')
-a=['PAXUSDT','TUSDUSDT','USDCUSDT','BUSDUSDT','PAXGUSDT','EURUSDT','SUSDUSDT','GBPUSDT']
-for symbol in symbo:
-    if symbol not in a:
-        symbols.append(symbol)
-#@st.cache  
-#def db_connect():
-client = pymongo.MongoClient("mongodb://Mohamed:M12345678@cluster0-shard-00-00.otw9p.mongodb.net:27017,cluster0-shard-00-01.otw9p.mongodb.net:27017,cluster0-shard-00-02.otw9p.mongodb.net:27017/crypto_OHLCV?ssl=true&replicaSet=atlas-10tsd5-shard-0&authSource=admin&retryWrites=true&w=majority")
-db = client.test
-db = client["Signal_OHLCV"]
-
-
-def job15m():
-    print('15m')
-    signal(symbols,['15m'],db)
-def job1h():
-    print('1h')
-    signal(symbols,['1h'],db)
-def job4h():
-    print('4h')
-    signal(symbols,['4h'],db)
-def job1d():
-    print('1d')
-    signal(symbols,['1d'],db)
-
-
-# Schedule a periodic task: do job every 60 seconds
-#@st.cache(allow_output_mutation=True,hash_funcs={ crypto_signals.signal: id})
-def update_db():
-    manager = ScheduleManager()
-    manager.register_task(name="task1", job=job15m).period(900).start_at("10:00:00").start()
-    manager.register_task(name="task2", job=job1h).period(3600).start_at("10:00:00").start()
-    manager.register_task(name="task3", job=job4h).period(14400).start_at("12:00:00").start()
-    manager.register_task(name="task4", job=job1d).period_day_at("10:00:00").start()
-
-@st.cache(allow_output_mutation=True)
-def Call_db():
-    final,times=Call_db_signals()
-    return final,times
-
-
-final,times =Call_db()
-update_db()
-#flag=st.button('Update')
-#if flag==1:
-#    caching.clear_cache()
- #   final,times =Call_db()
-@st.cache(allow_output_mutation=True)
-def get_mutable():
-    return final
-
-mutable_object = get_mutable()
-if st.button('Update'):
-    mutable_object=[] 
-    final,times =Call_db()
-flag=st.button('DB_reload')
+final=update()
+flag=st.button('rescan again')
 if flag==1:
-    caching.clear_cache()
-    update_db()
-    final,times =Call_db()
-options = st.multiselect('What Buy Time frame you want',['15m', '1h', '4h', '1d'],['15m','1h'])
-if options:
-    opt=''
+        caching.clear_cache()
+        final=update()
+options = st.multiselect('What Buy Time frame you want',['5m','15m', '1h', '4h', '1d','1W','1M'],['15m','1h'])
+opt=''
+if '5m' in options:
+    opt=opt+' 5m'
+if '15m' in options:
+    opt=opt+' 15m'
+if '1h' in options:
+    opt=opt+' 1h'
+if '4h' in options:
+    opt=opt+' 4h'
+if '1d' in options:
+    opt=opt+' 1d'
+if '1W' in options:
+    opt=opt+' 1W'
+if '1M' in options:
+    opt=opt+' 1M'
 
-    if '15m' in options:
-        opt=opt+' 15m'
-    if '1h' in options:
-        opt=opt+' 1h'
-    if '4h' in options:
-        opt=opt+' 4h'
-    if '1d' in options:
-        opt=opt+' 1d'
 
-    if(opt[0]==' '):
-        opt=opt.replace(" ","")
+opt=opt.replace(" ","")
 
-    st.write('You selected:', options)
 
-    final['interval'] = final['interval'].str.replace(" ","")
-
-    f=final[final['interval']==opt]
-    st.dataframe(f.drop_duplicates())
+final['buy_interval'] = final['buy_interval'].str.replace(" ","")
+if len(opt)>0:
+    f=final[final['buy_interval']==opt]
 else:
-    st.dataframe(final.drop_duplicates())
-st.write('15m last updated at '+times[0])
-st.write('1h last updated at '+times[1])
-st.write('4h last updated at '+times[2])
-st.write('1d last updated at '+times[3])
+    f=final
+st.dataframe(f.sort_values('Score',ascending=False).drop_duplicates())
+
+symbol=st.selectbox('Symbol',final.symbol)
+st.dataframe(final[final['symbol']==symbol].sort_values('Score',ascending=False).drop_duplicates())
 
