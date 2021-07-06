@@ -59,6 +59,7 @@ def Call_db_signals():
     final['interval']=df['interval_15m']+' '+df['interval_1h']+' '+df['interval_4h']+' '+df['interval']
     final['Score']=df['Score_4h']+df['Score_1h']+df['Score']+df['Score_15m']
     final['Score_indicators']=df['score_indicator_4h']+df['score_indicator_1h']+df['score_indicator']+df['score_indicator_15m']
+    final['sell_intervals']=df['sell_intervals_15m']+' '+df['sell_intervals_1h']+' '+df['sell_intervals_4h']+' '+df['sell_intervals_1d']
     final=final.sort_values('Score',ascending=False).dropna()
     return final,times
 
