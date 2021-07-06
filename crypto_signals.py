@@ -56,7 +56,7 @@ def Call_db_signals():
     df1=df.join(df_1d.set_index('symbol'),  rsuffix='_1d')
     df=df1.join(df_15.set_index('symbol'),  rsuffix='_15m')
     final=pd.DataFrame()
-    final['interval']=df['interval_4h']+' '+df['interval_1h']+' '+df['interval']+' '+df['interval_15m']
+    final['interval']=df['interval_15m']+' '+df['interval_1h']+' '+df['interval_4h']+' '+df['interval']
     final['Score']=df['Score_4h']+df['Score_1h']+df['Score']+df['Score_15m']
     final['Score_indicators']=df['score_indicator_4h']+df['score_indicator_1h']+df['score_indicator']+df['score_indicator_15m']
     final=final.sort_values('Score',ascending=False).dropna()
@@ -66,6 +66,9 @@ def Call_db_signals():
 
 
 def signal(symbols,intervals,db):
+    client = pymongo.MongoClient("mongodb://Mohamed:M12345678@cluster0-shard-00-00.otw9p.mongodb.net:27017,cluster0-shard-00-01.otw9p.mongodb.net:27017,cluster0-shard-00-02.otw9p.mongodb.net:27017/crypto_OHLCV?ssl=true&replicaSet=atlas-10tsd5-shard-0&authSource=admin&retryWrites=true&w=majority")
+    db = client.test
+    db = client["Signal_OHLCV"]
     
     recommendation=[]
     interv=[]
@@ -74,13 +77,14 @@ def signal(symbols,intervals,db):
     symb_score=[]
     df=pd.DataFrame()
     intervs=[]
-    
+    sell_intervs=[]
     score_indicator=[]
     #symbols=['BTCUSDT','ETHUSDT','ICPUSDT','XRPUSDT']
     #Date=[]
     for symbol in symbols:
         symb_rec=[]
         buyTF=' '
+        sellTF=' '
         ind_score=0
         score=0
         try:
@@ -112,8 +116,10 @@ def signal(symbols,intervals,db):
                     buyTF=buyTF+' '+interval
                 elif x['RECOMMENDATION']=='SELL':
                     score=score-1
+                    sellTF=sellTF+' '+interval
                 elif x['RECOMMENDATION']=='STRONG_SELL':
                     score=score-2
+                    sellTF=sellTF+' '+interval
                 else:
                     score=score
             print(symbol,score)
@@ -122,6 +128,7 @@ def signal(symbols,intervals,db):
             symb_score.append(symbol)
             score_indicator.append(ind_score)
             intervs.append(buyTF)
+            sell_intervs.append(sellTF)
             #Date.append(Dates)
         except:
             continue
@@ -129,8 +136,9 @@ def signal(symbols,intervals,db):
     df['symbol']=symb_score
     df['Score']=total_score
     df['interval']=intervs
+    df['sell_intervals']=sell_intervs
     df['score_indicator']=score_indicator
-    df['Date']=df['Date']=coin.get_analysis().time
+    df['Date']=coin.get_analysis().time
     #df['symbol']=symb
     #df['interval']=interv
     #df['buy']=buy
