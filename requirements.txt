@@ -1,4 +1,1 @@
-ccxt
-numpy==1.19.2
-streamlit==0.79.0
 -i https://test.pypi.org/simple/ tradingview-ta==3.2.4
