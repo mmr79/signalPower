@@ -10,6 +10,7 @@ import time
 import pandas as pd
 from datetime import datetime
 import pymongo
+import ccxt
 
 def Call_db_signals():
     client = pymongo.MongoClient("mongodb://Mohamed:M12345678@cluster0-shard-00-00.otw9p.mongodb.net:27017,cluster0-shard-00-01.otw9p.mongodb.net:27017,cluster0-shard-00-02.otw9p.mongodb.net:27017/crypto_OHLCV?ssl=true&replicaSet=atlas-10tsd5-shard-0&authSource=admin&retryWrites=true&w=majority")
@@ -55,14 +56,100 @@ def Call_db_signals():
     
     df1=df.join(df_1d.set_index('symbol'),  rsuffix='_1d')
     df=df1.join(df_15.set_index('symbol'),  rsuffix='_15m')
+    df
     final=pd.DataFrame()
     final['interval']=df['interval_15m']+' '+df['interval_1h']+' '+df['interval_4h']+' '+df['interval']
     final['Score']=df['Score_4h']+df['Score_1h']+df['Score']+df['Score_15m']
     final['Score_indicators']=df['score_indicator_4h']+df['score_indicator_1h']+df['score_indicator']+df['score_indicator_15m']
-    final['sell_intervals']=df['sell_intervals_15m']+' '+df['sell_intervals_1h']+' '+df['sell_intervals_4h']+' '+df['sell_intervals_1d']
+    final['sell_TF_intervals']=df['sell_intervals_15m']+' '+df['sell_intervals']+' '+df['sell_intervals_4h']+' '+df['sell_intervals_1d']
     final=final.sort_values('Score',ascending=False).dropna()
     return final,times
 
+def Get_symbols(Type):
+    ex=ccxt.binance()
+    ex.load_markets()
+    f=pd.DataFrame(ex.fetch_markets())
+    symbs=f[f['active']==True].symbol.unique()
+    s=[]
+    u=[]
+    for symbol in symbs:
+        if symbol.split('/')[1]=='BTC':
+            s.append(symbol)
+        if symbol.split('/')[1]=='USDT':
+            u.append(symbol)
+    
+    if Type=='Future':
+        ex = ccxt.binance({
+      
+        'enableRateLimit': True,
+        'options': {
+            'defaultType': 'future',  # ←-------------- quotes and 'future'
+        },
+        })
+        
+        f=pd.DataFrame(ex.fetch_markets())
+        symbs=f[f['active']==True].symbol.unique()
+        symm=[]
+        for i in range(0,len(symbs)):
+            #if symbols[i] not in a:
+                symbs[i]=symbs[i].replace('/','')
+        nam='BINANCE:'
+        pr='PERP'
+        symbols=[]
+        for symbol in symbs:
+                
+                symbols.append(nam+symbol+pr)
+    
+    
+    elif Type=='BTC':
+        z=s   
+        symbo=[]   
+        for i in z:
+            if "DOWN/" in i or 'UP/' in i or 'BULL/' in i or 'BEAR/' in i:
+                t=1
+               
+            else:
+                t=-1
+                symbo.append(i)
+        symbols=[]
+        symm=[]
+        for i in range(0,len(symbo)):
+            #if symbols[i] not in a:
+                symbo[i]=symbo[i].replace('/','')
+        a=['PAXUSDT','TUSDUSDT','USDCUSDT','BUSDUSDT','PAXGUSDT','EURUSDT','SUSDUSDT','GBPUSDT','YOYOWBTC']
+        nam='BINANCE:'
+        for symbol in symbo:
+            if symbol not in a:
+                symbols.append(nam+symbol)
+                symm.append(symbol)
+   
+    elif Type=='USDT':
+        z=u
+        symbo=[]   
+        for i in z:
+            if "DOWN/" in i or 'UP/' in i or 'BULL/' in i or 'BEAR/' in i:
+                t=1
+               
+            else:
+                t=-1
+                symbo.append(i)
+        symbols=[]
+        symm=[]
+        for i in range(0,len(symbo)):
+            #if symbols[i] not in a:
+                symbo[i]=symbo[i].replace('/','')
+        a=['PAXUSDT','TUSDUSDT','USDCUSDT','BUSDUSDT','PAXGUSDT','EURUSDT','SUSDUSDT','GBPUSDT']
+        nam='BINANCE:'
+        for symbol in symbo:
+            if symbol not in a:
+                symbols.append(nam+symbol)
+                symm.append(symbol)
+        
+
+    return symbols
+            
+
+    
 
 
 

@@ -9,12 +9,16 @@ Created on Wed Jul  7 00:07:17 2021
 from datetime import datetime
 import pandas as pd
 import streamlit as st
-from tradingview_ta import TA_Handler, Interval, Exchange
+#from tradingview_ta import TA_Handler, Interval, Exchange
 import time
 from datetime import datetime
 import ccxt
 import numpy as np
+from crypto_signals import *
 from tradingview_ta import *
+#from .main import TA_Handler, TradingView, Analysis, Interval, Exchange, get_multiple_analysis, __version__
+#from .technicals import Recommendation, Compute
+
 from streamlit import caching
 hide_streamlit_style = """
 <style>
@@ -27,38 +31,8 @@ st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
         
 @st.cache(allow_output_mutation=True)
-def update():
-    ex=ccxt.binance()
-    ex.load_markets()
-    f=pd.DataFrame(ex.fetch_markets())
-    symbs=f[f['active']==True].symbol.unique()
-    s=[]
-    u=[]
-    for symbol in symbs:
-        if symbol.split('/')[1]=='BTC':
-            s.append(symbol)
-        if symbol.split('/')[1]=='USDT':
-            u.append(symbol)
-    z=u
-    symbo=[]   
-    for i in z:
-        if "DOWN/" in i or 'UP/' in i or 'BULL/' in i or 'BEAR/' in i:
-            t=1
-           
-        else:
-            t=-1
-            symbo.append(i)
-    symbols=[]
-    symm=[]
-    for i in range(0,len(symbo)):
-        #if symbols[i] not in a:
-            symbo[i]=symbo[i].replace('/','')
-    a=['PAXUSDT','TUSDUSDT','USDCUSDT','BUSDUSDT','PAXGUSDT','EURUSDT','SUSDUSDT','GBPUSDT']
-    nam='BINANCE:'
-    for symbol in symbo:
-        if symbol not in a:
-            symbols.append(nam+symbol)
-            symm.append(symbol)
+def update(Type):
+    symbols=Get_symbols(Type)
     analysis_5m = get_multiple_analysis(screener="crypto", interval=Interval.INTERVAL_5_MINUTES, symbols=symbols)
     analysis_15m = get_multiple_analysis(screener="crypto", interval=Interval.INTERVAL_15_MINUTES, symbols=symbols)
     analysis_1h = get_multiple_analysis(screener="crypto", interval=Interval.INTERVAL_1_HOUR, symbols=symbols)
@@ -125,13 +99,13 @@ def update():
     df['sell_intervals']=intervs_sell
     df['score_indicator']=score_indicator        
     return df
-
-final=update()
+Type=st.selectbox('Select what to scan',['USDT', 'BTC'])#,'Future'])
+final=update(Type)
 flag=st.button('rescan again')
 if flag==1:
         caching.clear_cache()
-        final=update()
-options = st.multiselect('What Buy Time frame you want',['5m','15m', '1h', '4h', '1d','1W','1M'],['15m','1h'])
+        final=update(Type)
+options = st.multiselect('What Buy Time frame you want',['5m','15m', '1h', '4h', '1d','1W','1M'],['5m','15m', '1h', '4h', '1d','1W','1M'])
 opt=''
 if '5m' in options:
     opt=opt+' 5m'
