@@ -37,6 +37,17 @@ def Get_symbols(Type):
         
         f=pd.DataFrame(ex.fetch_markets())
         symbs=f[f['active']==True].symbol.unique()
+        symm=[]
+        for i in range(0,len(symbs)):
+            #if symbols[i] not in a:
+                symbs[i]=symbs[i].replace('/','')
+        nam='BINANCE:'
+        pr='PERP'
+        symbols=[]
+        for symbol in symbs:
+                
+                symbols.append(nam+symbol+pr)
+    
     
     elif Type=='BTC':
         z=s   
@@ -53,13 +64,13 @@ def Get_symbols(Type):
         for i in range(0,len(symbo)):
             #if symbols[i] not in a:
                 symbo[i]=symbo[i].replace('/','')
-        a=['PAXUSDT','TUSDUSDT','USDCUSDT','BUSDUSDT','PAXGUSDT','EURUSDT','SUSDUSDT','GBPUSDT']
+        a=['PAXUSDT','TUSDUSDT','USDCUSDT','BUSDUSDT','PAXGUSDT','EURUSDT','SUSDUSDT','GBPUSDT','YOYOWBTC']
         nam='BINANCE:'
         for symbol in symbo:
             if symbol not in a:
                 symbols.append(nam+symbol)
                 symm.append(symbol)
-        symbs=symm
+   
     elif Type=='USDT':
         z=u
         symbo=[]   
@@ -81,9 +92,9 @@ def Get_symbols(Type):
             if symbol not in a:
                 symbols.append(nam+symbol)
                 symm.append(symbol)
-        symbs=symm
-    
-    return symbs
+        
+
+    return symbols
             
 
     
